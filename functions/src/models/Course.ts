@@ -29,7 +29,6 @@ export default class Course extends Model {
       specialty: string;
     }[];
     sortAs: string;
-    originalOCWData: any;
   };
 
   constructor(data: any, id?: string) {
@@ -45,7 +44,6 @@ export default class Course extends Model {
       tabs: data.tabs,
       url: data.url,
       semesterTaught: data.semesterTaught,
-      originalOCWData: data.originalOCWData || {},
       level: data.level,
       department: data.department,
       locations: data.locations,
