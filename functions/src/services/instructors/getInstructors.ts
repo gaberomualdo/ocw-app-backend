@@ -1,18 +1,19 @@
 import * as functions from 'firebase-functions';
 
+import Course from '../../models/Course';
 import {
   getInstructorsCoursesMap,
   removeDuplicatesFromArray,
 } from '../../util';
 
 export const getInstructors = functions.https.onRequest(async (request, response) => {
-  const instructorsCoursesMap = await getInstructorsCoursesMap();
+  const instructorsCoursesMap: { [key: string]: Course[] } = await getInstructorsCoursesMap();
   response.send(
     Object.keys(instructorsCoursesMap).map((instructorName) => {
-      const instructorCourses = instructorsCoursesMap[instructorName];
+      const instructorCourses: Course[] = instructorsCoursesMap[instructorName];
       return {
         name: instructorName,
-        departments: removeDuplicatesFromArray(instructorCourses.map((course: any) => course.location.department)),
+        departments: removeDuplicatesFromArray(instructorCourses.map((course: Course) => course.data.department)),
         numberOfCourses: instructorCourses.length,
       };
     })

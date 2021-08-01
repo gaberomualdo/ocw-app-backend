@@ -1,16 +1,19 @@
 import * as functions from 'firebase-functions';
 
-import { getAllFromFirestore } from '../../util';
+import {
+  getAllFromFirestore,
+  removeDuplicatesFromArray,
+} from '../../util';
 
 export const getLocations = functions.https.onRequest(async (request, response) => {
-  const locations = new Set();
+  let locationsAsJSONStrings: string[] = [];
   const courses = await getAllFromFirestore('courses');
   courses.forEach((course) => {
     const courseLocations = course.data().locations;
     courseLocations.forEach((location: any) => {
-      locations.add(location);
+      locationsAsJSONStrings.push(JSON.stringify(location));
     });
   });
-
-  response.send(locations);
+  const locationsAsObjs = removeDuplicatesFromArray(locationsAsJSONStrings).map((e: string) => JSON.parse(e));
+  response.send(locationsAsObjs);
 });
