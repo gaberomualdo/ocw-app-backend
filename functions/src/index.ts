@@ -14,6 +14,8 @@ export * from './services/instructors/';
 export * from './services/lectures/';
 export * from './services/locations/';
 export * from './services/userInfo/';
+export * from './services/blog/';
+export * from './services/radio/';
 
 export const isAlive = functions.https.onRequest((request, response) => {
   response.json({

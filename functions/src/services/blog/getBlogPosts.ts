@@ -19,13 +19,14 @@ const getBackgroundImageURLFromStyle = (style: string) => {
   return '';
 };
 
-const fetchBlogPosts = async (pageNumber: number) => {
+const fetchBlogPosts = async (pageNumber: number, searchQuery?: string) => {
   if (pageNumber <= 0) pageNumber = 1;
   let url;
+  let searchQueryParam = searchQuery ? '?s=' + searchQuery : '';
   if (pageNumber === 1) {
-    url = 'https://www.ocw-openmatters.org/';
+    url = `https://www.ocw-openmatters.org/${searchQueryParam}`;
   } else {
-    url = `https://www.ocw-openmatters.org/page/${pageNumber}/`;
+    url = `https://www.ocw-openmatters.org/page/${pageNumber}/${searchQueryParam}`;
   }
 
   const document = await fetchHTML(url);
@@ -50,11 +51,13 @@ const fetchBlogPosts = async (pageNumber: number) => {
     const imageElement = articleElement.querySelector('[role="img"]');
     const descriptionElement = articleElement.querySelector('.post-excerpt');
     if (!headerElement || !imageElement || !descriptionElement) return;
+    let description = descriptionElement.textContent || 'No description for this article was provided.';
+    description = removeUselessWhitespace(description);
     const article = {
       title: headerElement.textContent || '',
       imageURL: getBackgroundImageURLFromStyle(imageElement.getAttribute('style') || ''),
       url: headerElement?.getAttribute('href') || '',
-      description: descriptionElement.textContent || 'No description for this article was provided.',
+      description,
     };
     if (
       !article.title ||
@@ -67,7 +70,7 @@ const fetchBlogPosts = async (pageNumber: number) => {
       return;
     articles.push(article);
   });
-  return { articles, pageCount };
+  return { pageCount, articles };
 };
 
 const fallbackNumber = (number: number, fallback: number): number => {
@@ -78,10 +81,12 @@ const fallbackNumber = (number: number, fallback: number): number => {
   }
 };
 
-export const getRadioEpisodes = functions.https.onRequest(async (request, response) => {
-  let { page } = request.query;
+export const getBlogPosts = functions.https.onRequest(async (request, response) => {
+  let { page, searchQuery } = request.query;
   if (!page) page = '1';
+  if (searchQuery) searchQuery = searchQuery.toString();
+  if (!searchQuery) searchQuery = undefined;
   const pageNumber = fallbackNumber(parseInt(page.toString()), 1);
-  const results = await fetchBlogPosts(pageNumber);
+  const results = await fetchBlogPosts(pageNumber, searchQuery);
   response.json(results);
 });
