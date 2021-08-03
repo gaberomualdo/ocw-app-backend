@@ -37,10 +37,10 @@ export const getLectures = functions.https.onRequest(async (request, response) =
 
     const aboutParentElement = document.querySelector('#vid_about');
     if (aboutParentElement) {
-      const aboutInnermostParentElement = getInnermostParent(aboutParentElement);
-      try {
-        aboutHTML = (<HTMLElement>aboutInnermostParentElement).innerHTML;
-      } catch (err) {
+      const aboutInnermostParentElement: any = getInnermostParent(aboutParentElement);
+      if (aboutInnermostParentElement.innerHTML) {
+        aboutHTML = aboutInnermostParentElement.innerHTML;
+      } else {
         aboutHTML = aboutInnermostParentElement.textContent;
       }
     } else {

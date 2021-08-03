@@ -45,7 +45,7 @@ const fetchBlogPosts = async (pageNumber: number) => {
 
   // get articles
   const articles: Article[] = [];
-  document.querySelectorAll('article').forEach((articleElement) => {
+  document.querySelectorAll('article').forEach((articleElement: any) => {
     const headerElement = articleElement.querySelector('header h1 a');
     const imageElement = articleElement.querySelector('[role="img"]');
     const descriptionElement = articleElement.querySelector('.post-excerpt');

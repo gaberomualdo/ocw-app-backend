@@ -31,15 +31,16 @@ const getCourseFromJSON = async (course: GenericObject) => {
   }
 
   const instructors: string[] = Array.from(document.querySelectorAll('[itemprop="author"]'))
-    .map((e) => removeUselessWhitespace(e.textContent || ''))
-    .filter((e) => e.length > 0);
+    .map((e: any) => removeUselessWhitespace(e.textContent || ''))
+    .filter((e: string) => e.length > 0);
 
   let description: string;
   {
     const descriptionParagraphs: string[] = [];
     let descriptionHeaderFound = false;
     let textElements = Array.from(document.querySelectorAll('[itemprop="description"] > div > *'));
-    for (const item of textElements) {
+    let item: any;
+    for (item of textElements) {
       // break after a header after course description has been found
       if (descriptionHeaderFound && ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(item.tagName)) break;
 
@@ -50,7 +51,7 @@ const getCourseFromJSON = async (course: GenericObject) => {
   }
 
   let tabs: Course['data']['tabs'] = [];
-  document.querySelectorAll('#course_nav > ul > li').forEach((e) => {
+  document.querySelectorAll('#course_nav > ul > li').forEach((e: any) => {
     const link = e.querySelector('a:not([href="#"])');
     if (!link) return;
     const tab = {

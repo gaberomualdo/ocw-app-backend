@@ -42,7 +42,7 @@ export const getLectures = functions.https.onRequest(async (request, response) =
   const lecturesURL = urljoin(courseObj.data.url, 'video-lectures/');
   const document = await fetchHTML(lecturesURL);
   let lectures: MinimalLecture[] = [];
-  document.querySelectorAll('#course_inner_media_gallery > .medialisting').forEach((lectureElement, lectureIndex) => {
+  document.querySelectorAll('#course_inner_media_gallery > .medialisting').forEach((lectureElement: any, lectureIndex: number) => {
     const url = parseURL(lectureElement.querySelector('a')?.getAttribute('href') || '');
     const thumbnailURL = parseURL(lectureElement.querySelector('a')?.getAttribute('src') || '');
     const title = removeUselessWhitespace(lectureElement.querySelector('.mediatitle')?.textContent || '');

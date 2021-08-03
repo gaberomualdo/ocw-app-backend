@@ -76,7 +76,7 @@ export function parseURL(url: string) {
   return urljoin(SITE_BASEURL, url);
 }
 
-export function getInnermostParent(element: Node) {
+export function getInnermostParent(element: any) {
   let elm = element;
   while (elm.childNodes.length < 2) {
     elm = elm.childNodes[0];
