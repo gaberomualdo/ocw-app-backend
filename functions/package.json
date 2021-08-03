@@ -24,6 +24,7 @@
     "jsdom": "^16.7.0",
     "node-fetch": "^2.6.1",
     "promise.allsettled": "^1.0.4",
+    "string.prototype.matchall": "^4.0.5",
     "url-join": "^4.0.1",
     "uuid": "^8.3.2"
   },

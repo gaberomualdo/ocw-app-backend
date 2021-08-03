@@ -6,6 +6,7 @@ import urljoin = require('url-join');
 import Course from '../models/Course';
 import { SITE_BASEURL } from './constants';
 
+const matchAll = require('string.prototype.matchall');
 const uuid = require('uuid');
 const firestore = admin.firestore();
 
@@ -81,6 +82,11 @@ export function getInnermostParent(element: Node) {
     elm = elm.childNodes[0];
   }
   return elm;
+}
+
+export function findURLsInText(text: string) {
+  const regex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gm;
+  return [...matchAll(text, regex)];
 }
 
 export type GenericObject = { [key: string]: any };
