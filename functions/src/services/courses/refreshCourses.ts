@@ -1,28 +1,26 @@
 import * as functions from 'firebase-functions';
-import { JSDOM } from 'jsdom';
-import fetch from 'node-fetch';
 
 import Course from '../../models/Course';
 import {
+  fetchHTML,
   fetchJSON,
   GenericObject,
+  removeUselessWhitespace,
 } from '../../util';
+import {
+  SITE_BASEURL,
+  SITE_TOPICS_ROUTE,
+} from '../../util/constants';
 
 const allSettled = require('promise.allsettled');
 const urljoin = require('url-join');
-const fs = require('fs');
-
-const SITE_BASEURL = 'https://ocw.mit.edu';
-const SITE_TOPICS_ROUTE = 'courses/find-by-topic';
 
 const REQUESTS_PER_BATCH = 30;
 const REQUESTS_MAX_TRIES = 10; // stop trying to request a particular course after this many times
 
 const getCourseFromJSON = async (course: GenericObject) => {
   const courseURL = urljoin(SITE_BASEURL, course.href);
-  const courseHTML = await (await fetch(courseURL)).text();
-  const courseDOM = new JSDOM(courseHTML);
-  const document = courseDOM.window.document;
+  const document = await fetchHTML(courseURL);
   const imageCaption = document.querySelector('#chpImage p')?.textContent || '';
 
   let imageURL = document.querySelector('#chpImage img')?.getAttribute('src');
@@ -32,9 +30,9 @@ const getCourseFromJSON = async (course: GenericObject) => {
     imageURL = '';
   }
 
-  const instructors: any[] = Array.from(document.querySelectorAll('[itemprop="author"]'))
-    .map((e) => e.textContent?.replace(/\s\s+/g, ' ').trim())
-    .filter((e) => e !== undefined);
+  const instructors: string[] = Array.from(document.querySelectorAll('[itemprop="author"]'))
+    .map((e) => removeUselessWhitespace(e.textContent || ''))
+    .filter((e) => e.length > 0);
 
   let description: string;
   {
@@ -117,13 +115,18 @@ const _refreshCourses = async () => {
       functions.logger.log(`Fetched ${resultingCourses.length} total courses so far.`);
     }
   }
-  return resultingCourses.map((e) => e.toJSON());
+
+  // save courses
+  for (const course of resultingCourses) {
+    await course.setIDToExistingCourseID();
+    await course.save();
+  }
 };
 
 export const refreshCoursesJob = functions.pubsub
   .schedule('0 8 * * *') // every day at 8am
   .timeZone('America/New_York')
-  .onRun(async (context) => {
+  .onRun(async () => {
     await _refreshCourses();
     return null;
   });
@@ -132,6 +135,5 @@ export const refreshCourses = functions.https.onRequest(async (request, response
   response.json({
     message: 'Command received succesfully',
   });
-  const result = await _refreshCourses();
-  fs.writeFileSync('./test.json', JSON.stringify(result, null, 4));
+  await _refreshCourses();
 });

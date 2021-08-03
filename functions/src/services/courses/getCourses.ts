@@ -33,11 +33,11 @@ Excluding search, sort by:
 
 */
 export const getCourses = functions.https.onRequest(async (request, response) => {
-  const coursesInDB = await getAllFromFirestore('courses');
-  let courses: any[] = [];
+  const coursesInDB = await getAllFromFirestore(Course.collectionName);
+  let courses: (Course['data'] & { id: string })[] = [];
   coursesInDB.forEach((course: any) => {
     const courseObj = new Course(course.data(), course.id);
-    const courseData = courseObj.toJSON();
+    const courseData = { id: course.id, ...courseObj.toJSON() };
     courses.push(courseData);
   });
 
@@ -62,15 +62,15 @@ export const getCourses = functions.https.onRequest(async (request, response) =>
 
   // search
   if (searchQuery) {
-    searchQuery = normalizeString(searchQuery.toString());
+    const searchQueryAsString = normalizeString(searchQuery.toString());
     courses = courses.filter((e) => {
       let locations: string[] = [];
-      e.locations.forEach((loc: string) => {
+      e.locations.forEach((loc: Course['data']['locations'][0]) => {
         locations = [...locations, ...Object.values(loc)];
       });
       for (let text of [e.title, e.description, e.imageCaption, e.semesterTaught, e.department, ...locations, ...e.instructors]) {
         text = normalizeString(text);
-        if (text.includes(searchQuery)) return true;
+        if (text.includes(searchQueryAsString)) return true;
       }
       return false;
     });
@@ -78,22 +78,22 @@ export const getCourses = functions.https.onRequest(async (request, response) =>
 
   // find by
   if (findByKey && findByValue) {
-    findByValue = findByValue.toString();
+    const findByValueAsString = findByValue.toString();
     switch (findByKey) {
       case 'instructor':
-        courses = courses.filter((e) => e.instructors.includes(findByValue));
+        courses = courses.filter((e) => e.instructors.includes(findByValueAsString));
         break;
       case 'level':
-        courses = courses.filter((e) => e.level === findByValue);
+        courses = courses.filter((e) => e.level === findByValueAsString);
         break;
       case 'department':
-        courses = courses.filter((e) => e.department === findByValue);
+        courses = courses.filter((e) => e.department === findByValueAsString);
         break;
       case 'semesterTaught':
-        courses = courses.filter((e) => e.semesterTaught === findByValue);
+        courses = courses.filter((e) => e.semesterTaught === findByValueAsString);
         break;
       case 'location':
-        const [topic, category, speciality] = findByValue.split(',');
+        const [topic, category, speciality] = findByValueAsString.split(',');
         courses = courses.filter((e) => {
           for (let location of e.locations) {
             if (location.topic === topic) return true;

@@ -1,5 +1,12 @@
-import { saveToFirestore } from '../util';
+import * as admin from 'firebase-admin';
+
+import {
+  GenericObject,
+  saveToFirestore,
+} from '../util';
 import Model from './Model';
+
+const firestore = admin.firestore();
 
 type Tab = {
   name: string;
@@ -7,7 +14,7 @@ type Tab = {
 };
 
 export default class Course extends Model {
-  collectionName: string;
+  static collectionName: string = 'courses';
   data: {
     url: string;
     title: string;
@@ -30,9 +37,8 @@ export default class Course extends Model {
     sortAs: string;
   };
 
-  constructor(data: any, id?: string) {
+  constructor(data: GenericObject, id?: string) {
     super(id);
-    this.collectionName = 'courses';
 
     this.data = {
       instructors: data.instructors,
@@ -51,6 +57,20 @@ export default class Course extends Model {
     };
   }
 
+  async setIDToExistingCourseID(matchByKey: string = 'url') {
+    const data: GenericObject = this.toJSON();
+    const matchByValue: any = data[matchByKey];
+    if (matchByValue) {
+      const query = firestore.collection(Course.collectionName).where(matchByKey, '==', matchByValue);
+      const snapshot = await query.get();
+      snapshot.forEach((doc) => {
+        this.id = doc.id;
+      });
+    } else {
+      throw new Error(`Key '${matchByKey}' does not exist on this object.`);
+    }
+  }
+
   toJSON() {
     // represents how this model is stored in Firestore
     return this.data;
@@ -58,7 +78,7 @@ export default class Course extends Model {
 
   save(): Promise<void> {
     return new Promise((resolve, reject) => {
-      saveToFirestore(this.collectionName, this.id, this.toJSON())
+      saveToFirestore(Course.collectionName, this.id, this.toJSON())
         .catch((err) => reject(err))
         .then(() => resolve());
     });

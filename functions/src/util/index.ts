@@ -1,7 +1,10 @@
 import * as admin from 'firebase-admin';
+import { JSDOM } from 'jsdom';
 import fetch from 'node-fetch';
+import urljoin = require('url-join');
 
 import Course from '../models/Course';
+import { SITE_BASEURL } from './constants';
 
 const uuid = require('uuid');
 const firestore = admin.firestore();
@@ -19,8 +22,8 @@ export async function getAllFromFirestore(collection: string) {
 }
 
 export async function getInstructorsCoursesMap(): Promise<{ [key: string]: Course[] }> {
-  const instructorsCoursesMap: any = {};
-  const courses = await getAllFromFirestore('courses');
+  const instructorsCoursesMap: { [key: string]: Course[] } = {};
+  const courses = await getAllFromFirestore(Course.collectionName);
   courses.forEach((course) => {
     const courseObj = new Course(course.data(), course.id);
     const courseData = courseObj.data;
@@ -47,8 +50,37 @@ export function normalizeString(str: string) {
   return cleanString(str).toLowerCase();
 }
 
+export function removeUselessWhitespace(str: string) {
+  return str.replace(/\s\s+/g, ' ').trim();
+}
+
 export async function fetchJSON(url: string) {
   return await (await fetch(url)).json();
+}
+
+export async function fetchHTML(url: string) {
+  const courseHTML = await (await fetch(url)).text();
+  const courseDOM = new JSDOM(courseHTML);
+  const document = courseDOM.window.document;
+  return document;
+}
+
+export function isPathAbsolute(path: string) {
+  const r = new RegExp('^(?:[a-z]+:)?//', 'i');
+  return r.test(path);
+}
+
+export function parseURL(url: string) {
+  if (isPathAbsolute(url)) return url;
+  return urljoin(SITE_BASEURL, url);
+}
+
+export function getInnermostParent(element: Node) {
+  let elm = element;
+  while (elm.childNodes.length < 2) {
+    elm = elm.childNodes[0];
+  }
+  return elm;
 }
 
 export type GenericObject = { [key: string]: any };

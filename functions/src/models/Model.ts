@@ -1,9 +1,12 @@
-import { getNewID } from '../util';
+import {
+  GenericObject,
+  getNewID,
+} from '../util';
 
 export default abstract class Model {
-  abstract toJSON(): any;
-  abstract save(): Promise<void>;
-  abstract collectionName: string;
+  abstract toJSON(): GenericObject;
+  static collectionName?: string;
+  save?(): Promise<void>;
   id: string;
 
   constructor(id?: string) {

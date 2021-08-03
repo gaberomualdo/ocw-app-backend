@@ -8,11 +8,11 @@ import {
 
 export const getLocations = functions.https.onRequest(async (request, response) => {
   let locationsAsJSONStrings: string[] = [];
-  const courses = await getAllFromFirestore('courses');
+  const courses = await getAllFromFirestore(Course.collectionName);
   courses.forEach((course) => {
     const courseObj = new Course(course.data(), course.id);
     const courseLocations = courseObj.data.locations;
-    courseLocations.forEach((location: any) => {
+    courseLocations.forEach((location: Course['data']['locations'][0]) => {
       locationsAsJSONStrings.push(JSON.stringify(location));
     });
   });
