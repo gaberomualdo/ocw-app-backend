@@ -60,9 +60,9 @@ export async function fetchJSON(url: string) {
 }
 
 export async function fetchHTML(url: string) {
-  const courseHTML = await (await fetch(url)).text();
-  const courseDOM = new JSDOM(courseHTML);
-  const document = courseDOM.window.document;
+  const HTML = await (await fetch(url)).text();
+  const DOM = new JSDOM(HTML);
+  const document = DOM.window.document;
   return document;
 }
 

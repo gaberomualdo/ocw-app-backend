@@ -1,14 +1,17 @@
 import * as functions from 'firebase-functions';
+import { JSDOM } from 'jsdom';
+import fetch from 'node-fetch';
 import urljoin = require('url-join');
 
 import Lecture from '../../models/Lecture';
 import {
   fetchHTML,
+  findURLsInText,
   getInnermostParent,
   parseURL,
 } from '../../util';
 
-export const getLectures = functions.https.onRequest(async (request, response) => {
+export const getLectureDetails = functions.https.onRequest(async (request, response) => {
   let { url, title, thumbnailURL, courseID } = request.query;
   if (!url || !title || !request.query.lectureIndex || !thumbnailURL) {
     response.status(404).json({
@@ -22,9 +25,9 @@ export const getLectures = functions.https.onRequest(async (request, response) =
   title = title.toString();
   thumbnailURL = thumbnailURL.toString();
 
-  let lecture: Lecture;
-  let lectureNotesURL;
-  let aboutHTML;
+  let lectureNotesURL = '';
+  let aboutHTML = '';
+  let videoURL = '';
 
   // Fetches instructors list, which is not currently part of Lecture objects.
   // let instructors;
@@ -33,8 +36,10 @@ export const getLectures = functions.https.onRequest(async (request, response) =
   //   .filter((e) => e.length > 0);
 
   {
-    const document = await fetchHTML(url);
+    const documentHTML = await (await fetch(url)).text();
+    const document = new JSDOM(documentHTML).window.document;
 
+    // aboutHTML
     const aboutParentElement = document.querySelector('#vid_about');
     if (aboutParentElement) {
       const aboutInnermostParentElement: any = getInnermostParent(aboutParentElement);
@@ -47,9 +52,9 @@ export const getLectures = functions.https.onRequest(async (request, response) =
       aboutHTML = document.querySelector('meta[name="Description"]')?.getAttribute('content') || 'No description for this lecture was provided.';
     }
 
-    lectureNotesURL = '';
+    // lecture notes
     try {
-      const lectureNotesIndexURL = urljoin(url, 'lecture-notes/');
+      const lectureNotesIndexURL = urljoin(url, '../../lecture-notes/');
       const lectureNotesIndexDocument = await fetchHTML(lectureNotesIndexURL);
       const lectureNotesPath = lectureNotesIndexDocument
         .querySelectorAll('#course_inner_section .maintabletemplate a')
@@ -57,9 +62,17 @@ export const getLectures = functions.https.onRequest(async (request, response) =
       if (!lectureNotesPath) return;
       lectureNotesURL = parseURL(lectureNotesPath);
     } catch (err) {}
+
+    // get video URL
+    const regex = /ocw_embed_chapter_media\(\'.*?\', \'.*?\',/gm;
+    const matches = documentHTML.match(regex);
+    if (matches && matches.length > 0) {
+      const urls = findURLsInText(matches[0]);
+      if (urls.length > 0) videoURL = urls[0];
+    }
   }
 
-  lecture = new Lecture({
+  const lecture: Lecture = new Lecture({
     url,
     title,
     courseID,
@@ -67,6 +80,7 @@ export const getLectures = functions.https.onRequest(async (request, response) =
     aboutHTML,
     thumbnailURL,
     lectureNotesURL,
+    videoURL,
   });
 
   response.json(lecture.toJSON());

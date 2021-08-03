@@ -10,6 +10,7 @@ export default class Lecture extends Model {
     aboutHTML: string;
     thumbnailURL: string;
     lectureNotesURL: string;
+    videoURL: string;
   };
 
   constructor(data: GenericObject, id?: string) {
@@ -17,6 +18,7 @@ export default class Lecture extends Model {
 
     this.data = {
       url: data.url,
+      videoURL: data.videoURL,
       title: data.title,
       courseID: data.courseID,
       lectureIndex: data.lectureIndex,
