@@ -10,9 +10,11 @@ export default class UserInfo extends Model {
   data: {
     favoritedCourseIDs: string[];
     lectureProgress: {
-      progressSeconds: number;
-      lecture: Lecture['data'];
-    }[];
+      [lectureURL: string]: {
+        progressSeconds: number;
+        lecture: Lecture['data'];
+      };
+    };
   };
 
   constructor(data: GenericObject, id?: string) {
