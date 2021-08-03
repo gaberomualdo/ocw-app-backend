@@ -1,12 +1,14 @@
 import * as functions from 'firebase-functions';
 
+import Course from '../../models/Course';
 import { getAllFromFirestore } from '../../util';
 
 export const getSemesters = functions.https.onRequest(async (request, response) => {
   const semesters = new Set();
   const courses = await getAllFromFirestore('courses');
   courses.forEach((course) => {
-    semesters.add(course.data().semesterTaught);
+    const courseObj = new Course(course.data(), course.id);
+    semesters.add(courseObj.data.semesterTaught);
   });
   const semestersArray = Array.from(semesters);
   semestersArray.sort((a, b) => {
@@ -19,5 +21,5 @@ export const getSemesters = functions.https.onRequest(async (request, response) 
     return semesterTime(b) - semesterTime(a);
   });
 
-  response.send(semestersArray);
+  response.json(semestersArray);
 });

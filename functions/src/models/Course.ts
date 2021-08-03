@@ -4,7 +4,6 @@ import Model from './Model';
 type Tab = {
   name: string;
   url: string;
-  subTabs?: Tab[];
 };
 
 export default class Course extends Model {
@@ -17,8 +16,8 @@ export default class Course extends Model {
     imageURL: string;
     imageCaption: string;
 
-    hasLectures: boolean;
     tabs: Tab[];
+    hasLectures: boolean;
 
     semesterTaught: string;
     level: string;
@@ -26,7 +25,7 @@ export default class Course extends Model {
     locations: {
       topic: string;
       category: string;
-      specialty: string;
+      speciality: string;
     }[];
     sortAs: string;
   };

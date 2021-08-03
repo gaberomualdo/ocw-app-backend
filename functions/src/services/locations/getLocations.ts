@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 
+import Course from '../../models/Course';
 import {
   getAllFromFirestore,
   removeDuplicatesFromArray,
@@ -9,7 +10,8 @@ export const getLocations = functions.https.onRequest(async (request, response) 
   let locationsAsJSONStrings: string[] = [];
   const courses = await getAllFromFirestore('courses');
   courses.forEach((course) => {
-    const courseLocations = course.data().locations;
+    const courseObj = new Course(course.data(), course.id);
+    const courseLocations = courseObj.data.locations;
     courseLocations.forEach((location: any) => {
       locationsAsJSONStrings.push(JSON.stringify(location));
     });

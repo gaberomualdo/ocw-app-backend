@@ -93,12 +93,12 @@ export const getCourses = functions.https.onRequest(async (request, response) =>
         courses = courses.filter((e) => e.semesterTaught === findByValue);
         break;
       case 'location':
-        const [topic, category, specialty] = findByValue.split(',');
+        const [topic, category, speciality] = findByValue.split(',');
         courses = courses.filter((e) => {
           for (let location of e.locations) {
             if (location.topic === topic) return true;
             if (location.category === category) return true;
-            if (location.specialty === specialty) return true;
+            if (location.speciality === speciality) return true;
           }
           return false;
         });

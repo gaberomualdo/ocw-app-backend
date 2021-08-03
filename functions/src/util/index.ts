@@ -1,10 +1,9 @@
 import * as admin from 'firebase-admin';
+import fetch from 'node-fetch';
 
 import Course from '../models/Course';
 
 const uuid = require('uuid');
-
-admin.initializeApp();
 const firestore = admin.firestore();
 
 export function getNewID(): string {
@@ -23,7 +22,8 @@ export async function getInstructorsCoursesMap(): Promise<{ [key: string]: Cours
   const instructorsCoursesMap: any = {};
   const courses = await getAllFromFirestore('courses');
   courses.forEach((course) => {
-    const courseData = course.data();
+    const courseObj = new Course(course.data(), course.id);
+    const courseData = courseObj.data;
     courseData.instructors.forEach((instructorName: any) => {
       if (!instructorsCoursesMap[instructorName]) instructorsCoursesMap[instructorName] = [];
       const courseObj = new Course(courseData, course.id);
@@ -46,3 +46,9 @@ export function cleanString(str: string) {
 export function normalizeString(str: string) {
   return cleanString(str).toLowerCase();
 }
+
+export async function fetchJSON(url: string) {
+  return await (await fetch(url)).json();
+}
+
+export type GenericObject = { [key: string]: any };

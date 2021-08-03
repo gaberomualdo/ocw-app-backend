@@ -8,7 +8,7 @@ import {
 
 export const getInstructors = functions.https.onRequest(async (request, response) => {
   const instructorsCoursesMap: { [key: string]: Course[] } = await getInstructorsCoursesMap();
-  response.send(
+  response.json(
     Object.keys(instructorsCoursesMap).map((instructorName) => {
       const instructorCourses: Course[] = instructorsCoursesMap[instructorName];
       return {
