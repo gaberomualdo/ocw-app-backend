@@ -119,9 +119,7 @@ const _refreshCourses = async () => {
   }
 
   // save courses
-  console.log('Found this many courses: ' + resultingCourses.length);
   for (const course of resultingCourses) {
-    console.log('adding course');
     await course.setIDToExistingCourseID();
     await course.save();
   }

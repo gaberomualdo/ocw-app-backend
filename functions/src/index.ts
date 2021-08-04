@@ -1,19 +1,13 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 
-import {
-  getNewID,
-  saveToFirestore,
-} from './util';
-
 // Use the below code to initialize with a service account
-const serviceAccount = require('./config/serviceAccountKey');
+// const serviceAccount = require('./config/serviceAccountKey');
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+// });
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
-// admin.initializeApp();
+admin.initializeApp();
 
 export * from './services/courses/';
 export * from './services/instructors/';
@@ -32,11 +26,13 @@ export const isAlive = functions.https.onRequest((request, response) => {
 });
 
 export const testFirestore = functions.https.onRequest((request, response) => {
+  const { getNewID, saveToFirestore } = require('./util/');
+
   functions.logger.log('Attempting to save test item to Firestore');
   const itemID = getNewID();
   saveToFirestore('test-collection', itemID, {
     message: `Hello, world from item with ID: ${itemID}`,
   })
-    .catch((err) => response.json(err))
+    .catch((err: any) => response.json(err))
     .then(() => response.json({ message: 'Success' }));
 });

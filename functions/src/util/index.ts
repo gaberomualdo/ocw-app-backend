@@ -89,4 +89,9 @@ export function findURLsInText(text: string) {
   return [...matchAll(text, regex)].map((e: string[]) => e[0]);
 }
 
+export function toJSON(obj: any) {
+  // TODO: figure out a better way of doing this
+  return JSON.parse(JSON.stringify(obj));
+}
+
 export type GenericObject = { [key: string]: any };

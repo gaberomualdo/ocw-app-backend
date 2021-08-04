@@ -1,6 +1,7 @@
 import {
   GenericObject,
   saveToFirestore,
+  toJSON,
 } from '../util';
 import Lecture from './Lecture';
 import Model from './Model';
@@ -27,7 +28,7 @@ export default class UserInfo extends Model {
   }
 
   toJSON() {
-    return this.data;
+    return toJSON(this.data);
   }
 
   save(): Promise<void> {

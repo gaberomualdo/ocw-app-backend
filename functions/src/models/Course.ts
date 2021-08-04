@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import {
   GenericObject,
   saveToFirestore,
+  toJSON,
 } from '../util';
 import Model from './Model';
 
@@ -73,11 +74,12 @@ export default class Course extends Model {
 
   toJSON() {
     // represents how this model is stored in Firestore
-    return this.data;
+    return toJSON(this.data);
   }
 
   save(): Promise<void> {
     return new Promise((resolve, reject) => {
+      console.log(this.toJSON());
       saveToFirestore(Course.collectionName, this.id, this.toJSON())
         .catch((err) => reject(err))
         .then(() => resolve());
