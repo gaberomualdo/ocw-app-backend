@@ -5,6 +5,7 @@
     "build": "tsc",
     "build:dev": "tsc --watch",
     "serve": "concurrently 'npm run build:dev' 'firebase emulators:start --only functions'",
+    "serve:prod": "concurrently 'npm run build:dev' 'firebase serve --only functions --port 5001'",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",

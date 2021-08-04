@@ -94,8 +94,9 @@ const _refreshCourses = async () => {
 
   const resultingCourses: Course[] = [];
   {
-    let targetCoursesCount = coursesJSON.length;
+    let targetCoursesCount = /* coursesJSON.length */ 10; // to speed up testing, enter a small value here
     while (resultingCourses.length < targetCoursesCount) {
+      console.log(resultingCourses.length);
       const currentBatch = coursesJSON.slice(0, REQUESTS_PER_BATCH);
       const results = await allSettled(currentBatch.map((e) => getCourseFromJSON(e)));
       coursesJSON.splice(0, REQUESTS_PER_BATCH);
@@ -118,7 +119,9 @@ const _refreshCourses = async () => {
   }
 
   // save courses
+  console.log('Found this many courses: ' + resultingCourses.length);
   for (const course of resultingCourses) {
+    console.log('adding course');
     await course.setIDToExistingCourseID();
     await course.save();
   }
