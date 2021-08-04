@@ -79,7 +79,6 @@ export default class Course extends Model {
 
   save(): Promise<void> {
     return new Promise((resolve, reject) => {
-      console.log(this.toJSON());
       saveToFirestore(Course.collectionName, this.id, this.toJSON())
         .catch((err) => reject(err))
         .then(() => resolve());
