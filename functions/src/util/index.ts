@@ -30,7 +30,6 @@ export async function getInstructorsCoursesMap(): Promise<{ [key: string]: Cours
     const courseData = courseObj.data;
     courseData.instructors.forEach((instructorName: any) => {
       if (!instructorsCoursesMap[instructorName]) instructorsCoursesMap[instructorName] = [];
-      const courseObj = new Course(courseData, course.id);
       instructorsCoursesMap[instructorName].push(courseObj);
     });
   });
@@ -74,6 +73,17 @@ export function isPathAbsolute(path: string) {
 export function parseURL(url: string) {
   if (isPathAbsolute(url)) return url;
   return urljoin(SITE_BASEURL, url);
+}
+
+export function getHostname(url: string) {
+  const { hostname } = new URL(url);
+  return hostname;
+}
+
+export function isLocalURL(url: string): boolean {
+  const hostname = getHostname(url);
+  const ourHostname = getHostname(SITE_BASEURL);
+  return hostname === ourHostname || hostname === `www.${ourHostname}` || `www.${hostname}` === ourHostname;
 }
 
 export function getInnermostParent(element: any) {

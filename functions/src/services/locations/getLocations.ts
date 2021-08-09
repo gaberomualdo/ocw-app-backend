@@ -17,5 +17,14 @@ export const getLocations = functions.https.onRequest(async (request, response) 
     });
   });
   const locationsAsObjs = removeDuplicatesFromArray(locationsAsJSONStrings).map((e: string) => JSON.parse(e));
-  response.send(locationsAsObjs);
+  const locationsMap: { [key: string]: any } = {};
+  locationsAsObjs.forEach((location: Course['data']['locations'][0]) => {
+    if (location.topic) if (!locationsMap[location.topic]) locationsMap[location.topic] = {};
+    if (location.category) if (!locationsMap[location.topic][location.category]) locationsMap[location.topic][location.category] = {};
+    if (location.speciality)
+      if (!locationsMap[location.topic][location.category][location.speciality])
+        locationsMap[location.topic][location.category][location.speciality] = {};
+    locationsMap[location.topic][location.category][location.speciality] = '';
+  });
+  response.send(locationsMap);
 });

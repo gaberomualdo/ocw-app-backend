@@ -6,6 +6,7 @@ import Course from '../../models/Course';
 import MinimalLecture from '../../models/MinimalLecture';
 import {
   fetchHTML,
+  isLocalURL,
   parseURL,
   removeUselessWhitespace,
 } from '../../util';
@@ -39,24 +40,53 @@ export const getLectures = functions.https.onRequest(async (request, response) =
     return;
   }
 
-  const lecturesURL = urljoin(courseObj.data.url, 'video-lectures/');
-  const document = await fetchHTML(lecturesURL);
   let lectures: MinimalLecture[] = [];
-  document.querySelectorAll('#course_inner_media_gallery > .medialisting').forEach((lectureElement: any, lectureIndex: number) => {
-    const url = parseURL(lectureElement.querySelector('a')?.getAttribute('href') || '');
-    const thumbnailURL = parseURL(lectureElement.querySelector('a')?.getAttribute('src') || '');
-    const title = removeUselessWhitespace(lectureElement.querySelector('.mediatitle')?.textContent || '');
-    if ([url, thumbnailURL, title].filter((e) => e.length === 0).length === 0) {
-      const lectureObj = new MinimalLecture({
-        url,
-        thumbnailURL,
-        title,
-        lectureIndex,
-        courseID,
-      });
-      lectures.push(lectureObj);
+  const possibleLecturesPaths = ['video-lectures/', 'lecture-videos/', 'course-videos/', 'course-lectures/', 'lectures/', 'videos/'];
+  const possibleLecturesURLs = possibleLecturesPaths.map((e) => urljoin(courseObj.data.url, e));
+  const possibleLecturesFeatureNames = [
+    'video lectures',
+    'course videos',
+    'course lectures',
+    'lecture videos',
+    'lecture video',
+    'videos',
+    'lectures',
+    'video',
+  ];
+  courseObj.data.features.forEach((feature) => {
+    feature.name = feature.name.toLowerCase();
+    if (possibleLecturesFeatureNames.includes(feature.name)) {
+      if (isLocalURL(feature.url)) {
+        if (possibleLecturesURLs.includes(feature.url)) {
+          possibleLecturesURLs.slice(possibleLecturesURLs.indexOf(feature.url), 1);
+        } else {
+          possibleLecturesURLs.push(feature.url);
+        }
+      }
     }
   });
+  for (const lecturesURL of possibleLecturesURLs) {
+    const document = await fetchHTML(lecturesURL);
+    const lectureElements = document.querySelectorAll('#course_inner_media_gallery > .medialisting');
+    lectureElements.forEach((lectureElement: any, lectureIndex: number) => {
+      const url = lectureElement.querySelector('a')?.getAttribute('href') || '';
+      const thumbnailURL = lectureElement.querySelector('img')?.getAttribute('src') || '';
+      const title = removeUselessWhitespace(lectureElement.querySelector('.mediatitle')?.textContent || '');
+      if ([url, title].filter((e) => e.length === 0).length === 0) {
+        const lectureObj = new MinimalLecture({
+          url: parseURL(url),
+          // sddefault.jpg is YouTube's larger thumbnail
+          thumbnailURL: thumbnailURL.length > 0 ? parseURL(thumbnailURL.replace('/default.jpg', '/sddefault.jpg')) : '',
+          title,
+          lectureIndex,
+          courseID,
+        });
+        lectures.push(lectureObj);
+      }
+    });
+    // this lecture path had the lectures, so move on and return
+    if (lectureElements.length > 0) break;
+  }
 
   response.json(lectures.map((e) => e.toJSON()));
 });

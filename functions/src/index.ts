@@ -9,13 +9,14 @@ import * as functions from 'firebase-functions';
 
 admin.initializeApp();
 
+export * from './services/blog/';
 export * from './services/courses/';
 export * from './services/instructors/';
 export * from './services/lectures/';
 export * from './services/locations/';
-export * from './services/userInfo/';
-export * from './services/blog/';
 export * from './services/radio/';
+export * from './services/semesters/';
+export * from './services/userInfo/';
 
 export const isAlive = functions.https.onRequest((request, response) => {
   const message = 'Firebase functions are running!';

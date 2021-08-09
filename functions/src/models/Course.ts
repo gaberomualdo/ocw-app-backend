@@ -13,6 +13,10 @@ type Tab = {
   name: string;
   url: string;
 };
+type CourseFeature = {
+  name: string;
+  url: string;
+};
 
 export default class Course extends Model {
   static collectionName: string = 'courses';
@@ -25,6 +29,7 @@ export default class Course extends Model {
     imageCaption: string;
 
     tabs: Tab[];
+    features: CourseFeature[];
     hasLectures: boolean;
 
     semesterTaught: string;
@@ -48,6 +53,7 @@ export default class Course extends Model {
       imageCaption: data.imageCaption,
       hasLectures: data.hasLectures,
       tabs: data.tabs,
+      features: data.features,
       url: data.url,
       semesterTaught: data.semesterTaught,
       level: data.level,

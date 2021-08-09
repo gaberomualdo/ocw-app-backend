@@ -5,6 +5,7 @@ import {
   fetchHTML,
   fetchJSON,
   GenericObject,
+  parseURL,
   removeUselessWhitespace,
 } from '../../util';
 import {
@@ -34,32 +35,47 @@ const getCourseFromJSON = async (course: GenericObject) => {
     .map((e: any) => removeUselessWhitespace(e.textContent || ''))
     .filter((e: string) => e.length > 0);
 
+  // compile description and course features
   let description: string;
+  let features: Course['data']['features'] = [];
   {
-    const descriptionParagraphs: string[] = [];
-    let descriptionHeaderFound = false;
+    const isHeader = (elm: any) => ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(elm.tagName);
     let textElements = Array.from(document.querySelectorAll('[itemprop="description"] > div > *'));
-    let item: any;
-    for (item of textElements) {
-      // break after a header after course description has been found
-      if (descriptionHeaderFound && ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(item.tagName)) break;
-
-      if (descriptionHeaderFound && item.textContent) descriptionParagraphs.push(item.textContent);
-      if (item.textContent?.includes('Course Description')) descriptionHeaderFound = true;
+    let currentHeader: string = '';
+    const textSections: { [header: string]: Node[] } = {};
+    for (const item of textElements) {
+      if (item.textContent) {
+        if (isHeader(item)) {
+          currentHeader = removeUselessWhitespace(item.textContent);
+        } else {
+          if (!textSections[currentHeader]) textSections[currentHeader] = [];
+          textSections[currentHeader].push(item);
+        }
+      }
     }
-    description = descriptionParagraphs.join('\n\n');
+    description = textSections['Course Description'].map((e) => e.textContent).join('\n\n');
+    textSections['Course Features'].forEach((e: any) => {
+      e.querySelectorAll('a').forEach((link: HTMLElement) => {
+        const rawURL = link.getAttribute('href');
+        const name = link.textContent;
+        if (!name || !rawURL) return;
+        features.push({ name, url: parseURL(rawURL) });
+      });
+    });
   }
 
+  // compile tabs
   let tabs: Course['data']['tabs'] = [];
   document.querySelectorAll('#course_nav > ul > li').forEach((e: any) => {
     const link = e.querySelector('a:not([href="#"])');
     if (!link) return;
-    const tab = {
-      name: link.textContent?.trim() || '',
-      url: link.getAttribute('href') || '',
-    };
-    if (tab.name.length === 0 || tab.url.length === 0) return;
-    tabs.push(tab);
+    const tabName = link.textContent?.trim() || '';
+    const tabURL = link.getAttribute('href') || '';
+    if (tabName.length === 0 || tabURL.length === 0) return;
+    tabs.push({
+      name: tabName,
+      url: parseURL(tabURL),
+    });
   });
 
   return new Course({
@@ -69,6 +85,7 @@ const getCourseFromJSON = async (course: GenericObject) => {
     description,
     imageURL,
     imageCaption,
+    features,
     tabs,
     hasLectures: course.completeVideo,
     semesterTaught: course.sem,
