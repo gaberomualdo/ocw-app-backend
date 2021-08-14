@@ -1,12 +1,12 @@
 import * as functions from 'firebase-functions';
 
-// import refreshCourses from './refreshCourses';
+import refreshCourses from './refreshCourses';
 import refreshInstructorsMap from './refreshInstructors';
 import refreshLocations from './refreshLocations';
 import refreshSemestersList from './refreshSemestersList';
 
 const refreshJobsMap: { [jobName: string]: Function } = {
-  // 'Refresh Courses': refreshCourses,
+  'Refresh Courses': refreshCourses,
   'Refresh Instructors': refreshInstructorsMap,
   'Refresh Semesters List': refreshSemestersList,
   'Refresh Locations': refreshLocations,
