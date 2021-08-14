@@ -105,3 +105,30 @@ export function toJSON(obj: any) {
 }
 
 export type GenericObject = { [key: string]: any };
+
+export class TimeLog {
+  start: Date;
+  constructor(start?: Date) {
+    if (start) {
+      this.start = start;
+    } else {
+      this.start = new Date();
+    }
+  }
+  getTime() {
+    const res = new Date().getTime() - this.start.getTime();
+    this.start = new Date();
+    return res;
+  }
+}
+
+// https://stackoverflow.com/questions/196972/convert-string-to-title-case-with-javascript
+export function toTitleCase(str: string) {
+  return str.replace(/\w\S*/g, function (txt: string) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+}
+
+export function parseKebabCase(text: string) {
+  return text.replace(/-/g, ' ');
+}

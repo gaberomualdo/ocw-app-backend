@@ -5,8 +5,10 @@ import {
   fetchHTML,
   fetchJSON,
   GenericObject,
+  parseKebabCase,
   parseURL,
   removeUselessWhitespace,
+  toTitleCase,
 } from '../../util';
 import {
   SITE_BASEURL,
@@ -16,13 +18,14 @@ import {
 const allSettled = require('promise.allsettled');
 const urljoin = require('url-join');
 
-const REQUESTS_PER_BATCH = 30;
+const REQUESTS_PER_BATCH = 15;
 const REQUESTS_MAX_TRIES = 10; // stop trying to request a particular course after this many times
 
 const getCourseFromJSON = async (course: GenericObject) => {
   const courseURL = urljoin(SITE_BASEURL, course.href);
   const document = await fetchHTML(courseURL);
   const imageCaption = document.querySelector('#chpImage p')?.textContent || '';
+  const department = toTitleCase(parseKebabCase(course.department));
 
   let imageURL = document.querySelector('#chpImage img')?.getAttribute('src');
   if (imageURL) {
@@ -36,7 +39,7 @@ const getCourseFromJSON = async (course: GenericObject) => {
     .filter((e: string) => e.length > 0);
 
   // compile description and course features
-  let description: string;
+  let description: string = '';
   let features: Course['data']['features'] = [];
   {
     const isHeader = (elm: any) => ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(elm.tagName);
@@ -53,15 +56,19 @@ const getCourseFromJSON = async (course: GenericObject) => {
         }
       }
     }
-    description = textSections['Course Description'].map((e) => e.textContent).join('\n\n');
-    textSections['Course Features'].forEach((e: any) => {
-      e.querySelectorAll('a').forEach((link: HTMLElement) => {
-        const rawURL = link.getAttribute('href');
-        const name = link.textContent;
-        if (!name || !rawURL) return;
-        features.push({ name, url: parseURL(rawURL) });
+    if (textSections['Course Description']) {
+      description = textSections['Course Description'].map((e) => e.textContent).join('\n\n');
+    }
+    if (textSections['Course Features']) {
+      textSections['Course Features'].forEach((e: any) => {
+        e.querySelectorAll('a').forEach((link: HTMLElement) => {
+          const rawURL = link.getAttribute('href');
+          const name = link.textContent;
+          if (!name || !rawURL) return;
+          features.push({ name, url: parseURL(rawURL) });
+        });
       });
-    });
+    }
   }
 
   // compile tabs
@@ -95,11 +102,18 @@ const getCourseFromJSON = async (course: GenericObject) => {
       category: e.subCat,
       speciality: e.speciality,
     })),
+    department,
     sortAs: course.sort_as,
   });
 };
 
-const _refreshCourses = async () => {
+const saveCourseFromJSON = async (course: GenericObject) => {
+  const courseObj = await getCourseFromJSON(course);
+  await courseObj.setIDToExistingCourseID();
+  await courseObj.save();
+};
+
+const refreshCourses = async () => {
   let coursesJSON: GenericObject[] = [];
   const topics = await fetchJSON(urljoin(SITE_BASEURL, SITE_TOPICS_ROUTE, 'topics.json'));
   for (const { name, file } of topics) {
@@ -108,17 +122,16 @@ const _refreshCourses = async () => {
   }
 
   functions.logger.log(`Found ${coursesJSON.length} courses.`);
-
-  const resultingCourses: Course[] = [];
   {
-    let targetCoursesCount = /* coursesJSON.length */ 10; // to speed up testing, enter a small value here
-    while (resultingCourses.length < targetCoursesCount) {
-      console.log(resultingCourses.length);
+    let coursesFetchedCount: number = 0;
+    let targetCoursesCount = coursesJSON.length; // to speed up testing, enter a small value here
+    while (coursesFetchedCount < targetCoursesCount) {
       const currentBatch = coursesJSON.slice(0, REQUESTS_PER_BATCH);
-      const results = await allSettled(currentBatch.map((e) => getCourseFromJSON(e)));
+      const results = await allSettled(currentBatch.map((e) => saveCourseFromJSON(e)));
       coursesJSON.splice(0, REQUESTS_PER_BATCH);
       results.forEach((result: GenericObject, idx: number) => {
         if (result.status === 'rejected') {
+          functions.logger.log(result.reason);
           // try again later for failed promises
           currentBatch[idx].requestTries++;
           if (currentBatch[idx].requestTries < REQUESTS_MAX_TRIES) {
@@ -128,31 +141,11 @@ const _refreshCourses = async () => {
             targetCoursesCount--;
           }
         } else {
-          resultingCourses.push(result.value);
+          coursesFetchedCount++;
         }
       });
-      functions.logger.log(`Fetched ${resultingCourses.length} total courses so far.`);
+      functions.logger.log(`Fetched ${coursesFetchedCount} total courses so far.`);
     }
   }
-
-  // save courses
-  for (const course of resultingCourses) {
-    await course.setIDToExistingCourseID();
-    await course.save();
-  }
 };
-
-export const refreshCoursesJob = functions.pubsub
-  .schedule('0 8 * * *') // every day at 8am
-  .timeZone('America/New_York')
-  .onRun(async () => {
-    await _refreshCourses();
-    return null;
-  });
-
-export const refreshCourses = functions.https.onRequest(async (request, response) => {
-  response.json({
-    message: 'Command received succesfully',
-  });
-  await _refreshCourses();
-});
+export default refreshCourses;
