@@ -35,7 +35,13 @@ const getCourseFromJSON = async (course: GenericObject) => {
   }
 
   const instructors: string[] = Array.from(document.querySelectorAll('[itemprop="author"]'))
-    .map((e: any) => removeUselessWhitespace(e.textContent || ''))
+    .map((e: any) => {
+      if (removeUselessWhitespace(e.firstChild.textContent).length > 0) {
+        return removeUselessWhitespace(e.firstChild.textContent);
+      } else {
+        return removeUselessWhitespace(e.textContent || '');
+      }
+    })
     .filter((e: string) => e.length > 0);
 
   // compile description and course features
