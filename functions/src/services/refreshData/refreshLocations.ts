@@ -2,11 +2,12 @@ import * as functions from 'firebase-functions';
 
 import Course from '../../models/Course';
 import {
+  Cache,
   getAllFromFirestore,
   removeDuplicatesFromArray,
 } from '../../util';
 
-export const getLocations = functions.https.onRequest(async (request, response) => {
+const refreshLocations = functions.https.onRequest(async (request, response) => {
   let locationsAsJSONStrings: string[] = [];
   const courses = await getAllFromFirestore(Course.collectionName);
   courses.forEach((course) => {
@@ -26,5 +27,7 @@ export const getLocations = functions.https.onRequest(async (request, response) 
         locationsMap[location.topic][location.category][location.speciality] = {};
     locationsMap[location.topic][location.category][location.speciality] = '';
   });
-  response.send(locationsMap);
+  Cache.saveToCache('locations', locationsMap);
 });
+
+export default refreshLocations;

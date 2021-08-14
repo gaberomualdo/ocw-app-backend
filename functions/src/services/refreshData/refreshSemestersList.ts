@@ -1,9 +1,12 @@
 import * as functions from 'firebase-functions';
 
 import Course from '../../models/Course';
-import { getAllFromFirestore } from '../../util';
+import {
+  Cache,
+  getAllFromFirestore,
+} from '../../util';
 
-export const getSemesters = functions.https.onRequest(async (request, response) => {
+const refreshSemestersList = functions.https.onRequest(async (request, response) => {
   const semesters: Set<string> = new Set();
   const courses = await getAllFromFirestore(Course.collectionName);
   courses.forEach((course) => {
@@ -20,6 +23,6 @@ export const getSemesters = functions.https.onRequest(async (request, response) 
     };
     return semesterTime(b) - semesterTime(a);
   });
-
-  response.json(semestersArray);
+  Cache.saveToCache('semesters-list', semestersArray);
 });
+export default refreshSemestersList;

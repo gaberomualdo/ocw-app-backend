@@ -4,11 +4,14 @@ import fetch from 'node-fetch';
 import urljoin = require('url-join');
 
 import Course from '../models/Course';
+import Cache, { CacheItemName } from './Cache';
 import { SITE_BASEURL } from './constants';
 
 const matchAll = require('string.prototype.matchall');
 const uuid = require('uuid');
 const firestore = admin.firestore();
+
+export { Cache, CacheItemName };
 
 export function getNewID(): string {
   return uuid.v4();
