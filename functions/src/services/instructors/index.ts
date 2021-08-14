@@ -1,1 +1,1 @@
-export * from './getInstructors';
+export * from './getInstructor';

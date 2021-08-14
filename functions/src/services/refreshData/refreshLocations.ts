@@ -1,13 +1,12 @@
-import * as functions from 'firebase-functions';
-
 import Course from '../../models/Course';
 import {
   Cache,
   getAllFromFirestore,
   removeDuplicatesFromArray,
 } from '../../util';
+import { LOCATIONS_HAS_OWN_ITEMS_KEY } from '../../util/constants';
 
-const refreshLocations = functions.https.onRequest(async (request, response) => {
+const refreshLocations = async () => {
   let locationsAsJSONStrings: string[] = [];
   const courses = await getAllFromFirestore(Course.collectionName);
   courses.forEach((course) => {
@@ -20,14 +19,22 @@ const refreshLocations = functions.https.onRequest(async (request, response) => 
   const locationsAsObjs = removeDuplicatesFromArray(locationsAsJSONStrings).map((e: string) => JSON.parse(e));
   const locationsMap: { [key: string]: any } = {};
   locationsAsObjs.forEach((location: Course['data']['locations'][0]) => {
-    if (location.topic) if (!locationsMap[location.topic]) locationsMap[location.topic] = {};
-    if (location.category) if (!locationsMap[location.topic][location.category]) locationsMap[location.topic][location.category] = {};
-    if (location.speciality)
-      if (!locationsMap[location.topic][location.category][location.speciality])
-        locationsMap[location.topic][location.category][location.speciality] = {};
-    locationsMap[location.topic][location.category][location.speciality] = '';
+    if (location.topic && !locationsMap[location.topic]) locationsMap[location.topic] = {};
+    if (location.category && !locationsMap[location.topic][location.category]) locationsMap[location.topic][location.category] = {};
+    if (location.speciality && !locationsMap[location.topic][location.category][location.speciality])
+      locationsMap[location.topic][location.category][location.speciality] = {};
+
+    if (!location.topic) {
+      locationsMap[LOCATIONS_HAS_OWN_ITEMS_KEY] = true;
+    } else if (!location.category) {
+      locationsMap[location.topic][LOCATIONS_HAS_OWN_ITEMS_KEY] = true;
+    } else if (!location.speciality) {
+      locationsMap[location.topic][location.category][LOCATIONS_HAS_OWN_ITEMS_KEY] = true;
+    } else {
+      locationsMap[location.topic][location.category][location.speciality][LOCATIONS_HAS_OWN_ITEMS_KEY] = true;
+    }
   });
   await Cache.saveToCache('locations', locationsMap);
-});
+};
 
 export default refreshLocations;

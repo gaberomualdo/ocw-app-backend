@@ -17,6 +17,7 @@ export * from './services/locations/';
 export * from './services/radio/';
 export * from './services/semesters/';
 export * from './services/userInfo/';
+export * from './services/refreshData/';
 
 export const isAlive = functions.https.onRequest((request, response) => {
   const message = 'Firebase functions are running!';

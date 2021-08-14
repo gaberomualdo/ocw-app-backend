@@ -135,3 +135,5 @@ export function toTitleCase(str: string) {
 export function parseKebabCase(text: string) {
   return text.replace(/-/g, ' ');
 }
+
+export const notUndefinedFilter = (e: any) => e !== undefined;

@@ -1,12 +1,10 @@
-import * as functions from 'firebase-functions';
-
 import Course from '../../models/Course';
 import {
   Cache,
   getAllFromFirestore,
 } from '../../util';
 
-const refreshSemestersList = functions.https.onRequest(async (request, response) => {
+const refreshSemestersList = async () => {
   const semesters: Set<string> = new Set();
   const courses = await getAllFromFirestore(Course.collectionName);
   courses.forEach((course) => {
@@ -24,5 +22,5 @@ const refreshSemestersList = functions.https.onRequest(async (request, response)
     return semesterTime(b) - semesterTime(a);
   });
   await Cache.saveToCache('semesters-list', semestersArray);
-});
+};
 export default refreshSemestersList;
