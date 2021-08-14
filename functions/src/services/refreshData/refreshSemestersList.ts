@@ -23,6 +23,6 @@ const refreshSemestersList = functions.https.onRequest(async (request, response)
     };
     return semesterTime(b) - semesterTime(a);
   });
-  Cache.saveToCache('semesters-list', semestersArray);
+  await Cache.saveToCache('semesters-list', semestersArray);
 });
 export default refreshSemestersList;

@@ -17,6 +17,6 @@ const refreshInstructorsMap = functions.https.onRequest(async (request, response
       numberOfCourses: instructorCourses.length,
     };
   });
-  Cache.saveToCache('instructors-map', data);
+  await Cache.saveToCache('instructors-map', data);
 });
 export default refreshInstructorsMap;

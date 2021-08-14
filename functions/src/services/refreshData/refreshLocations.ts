@@ -27,7 +27,7 @@ const refreshLocations = functions.https.onRequest(async (request, response) => 
         locationsMap[location.topic][location.category][location.speciality] = {};
     locationsMap[location.topic][location.category][location.speciality] = '';
   });
-  Cache.saveToCache('locations', locationsMap);
+  await Cache.saveToCache('locations', locationsMap);
 });
 
 export default refreshLocations;
