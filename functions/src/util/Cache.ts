@@ -8,7 +8,7 @@ import { CACHE_COLLECTION_NAME } from './constants';
 
 const firestore = admin.firestore();
 
-export type CacheItemName = 'locations' | 'semesters-list';
+export type CacheItemName = 'instructors-names' | 'locations' | 'semesters-list';
 
 export default class Cache {
   static async fetchFromCache(itemName: CacheItemName): Promise<any> {
