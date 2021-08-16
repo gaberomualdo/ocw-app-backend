@@ -1,114 +1,102 @@
+import algoliasearch from 'algoliasearch';
 import * as functions from 'firebase-functions';
 
-import Course from '../../models/Course';
 import {
-  getAllFromFirestore,
+  GenericObject,
   normalizeString,
 } from '../../util';
+import { ALGOLIA_COURSES_INDEX_NAME } from '../../util/constants';
 
-/*
+const client = algoliasearch(functions.config().algolia.app_id, functions.config().algolia.admin_api_key);
+const index = client.initIndex(ALGOLIA_COURSES_INDEX_NAME);
 
-Search using:
-  title
-  instructors
-  description
-  image caption
-  semester taught
-  department
-  locations
-
-Find by:
-  instructor
-  location
-  department
-  level
-  semester taught
-
-Filter by:
-  has video lectures
-  list of specified IDs
-
-Excluding search, sort by:
-  Alphabetize by sortAs
-
-*/
-export const getCourses = functions.https.onRequest(async (request, response) => {
-  const coursesInDB = await getAllFromFirestore(Course.collectionName);
-  let courses: (Course['data'] & { id: string })[] = [];
-  coursesInDB.forEach((course: any) => {
-    const courseObj = new Course(course.data(), course.id);
-    const courseData = { id: course.id, ...courseObj.toJSON() };
-    courses.push(courseData);
-  });
-
+export const getCourses = functions.https.onRequest(async (request: any, response: any) => {
+  const filters: string[] = [];
   // apply query params
-  let { filterBy, findByKey, findByValue, searchQuery, matchesCourseIDs } = request.query;
+  let { filterBy, level, instructors, departments, semestersTaught, searchQuery, matchesCourseIDs, page, location } = request.query;
+
+  let pageNum = 1;
+  if (page) {
+    page = page.toString();
+    if (!isNaN(parseInt(page))) pageNum = Math.max(1, parseInt(page));
+  }
+  console.log(pageNum);
 
   // filters
   switch (filterBy) {
     case 'hasVideoLectures':
-      courses = courses.filter((e) => e.hasLectures);
+      filters.push('hasLectures:true');
       break;
     case 'noVideoLectures':
-      courses = courses.filter((e) => !e.hasLectures);
+      filters.push('hasLectures:false');
       break;
   }
 
   // matches courses
   if (matchesCourseIDs) {
     const courseIDs = matchesCourseIDs.toString().split(',');
-    courses = courses.filter((e) => courseIDs.includes(e.id));
+    filters.push(`(${courseIDs.map((e: string) => `objectID:${JSON.stringify(e)}`).join(' OR ')})`);
   }
 
   // search
-  if (searchQuery) {
-    const searchQueryAsString = normalizeString(searchQuery.toString());
-    courses = courses.filter((e) => {
-      let locations: string[] = [];
-      e.locations.forEach((loc: Course['data']['locations'][0]) => {
-        locations = [...locations, ...Object.values(loc)];
-      });
-      for (let text of [e.title, e.description, e.imageCaption, e.semesterTaught, e.department, ...locations, ...e.instructors]) {
-        text = normalizeString(text);
-        if (text.includes(searchQueryAsString)) return true;
-      }
-      return false;
-    });
-  }
+  let searchQueryAsString = '';
+  if (searchQuery) searchQueryAsString = normalizeString(searchQuery.toString());
 
   // find by
-  if (findByKey && findByValue) {
-    const findByValueAsString = findByValue.toString();
-    switch (findByKey) {
-      case 'instructor':
-        courses = courses.filter((e) => e.instructors.includes(findByValueAsString));
-        break;
-      case 'level':
-        courses = courses.filter((e) => e.level === findByValueAsString);
-        break;
-      case 'department':
-        courses = courses.filter((e) => e.department === findByValueAsString);
-        break;
-      case 'semesterTaught':
-        courses = courses.filter((e) => e.semesterTaught === findByValueAsString);
-        break;
-      case 'location':
-        const [topic, category, speciality] = findByValueAsString.split(',');
-        courses = courses.filter((e) => {
-          for (let location of e.locations) {
-            if (location.topic === topic) return true;
-            if (location.category === category) return true;
-            if (location.speciality === speciality) return true;
-          }
-          return false;
-        });
-        break;
-    }
+  if (level) filters.push(`level:'${JSON.stringify(level)}'`);
+  if (departments) {
+    departments
+      .toString()
+      .split(',')
+      .forEach((e: string) => filters.push(`department:'${JSON.stringify(e)}'`));
+  }
+  if (instructors) {
+    instructors
+      .toString()
+      .split(',')
+      .forEach((e: string) => filters.push(`instructors:'${JSON.stringify(e)}'`));
+  }
+  if (semestersTaught) {
+    semestersTaught
+      .toString()
+      .split(',')
+      .forEach((e: string) => filters.push(`semesterTaught:'${JSON.stringify(e)}'`));
+  }
+  if (location) {
+    const locationsStrings = location.toString().split(',');
+    locationsStrings
+      .toString()
+      .split(',')
+      .forEach((e: string) => filters.push(`locationsStrings:'${JSON.stringify(e)}'`));
   }
 
-  // alphabetize results for non-search
-  if (!searchQuery) courses.sort((a, b) => a.sortAs.localeCompare(b.sortAs));
+  let result: GenericObject = await index.search(searchQueryAsString, {
+    filters: filters.join(' AND '),
+    page: pageNum - 1, // Algolia pages are zero-indexed
+    attributesToRetrieve: [
+      '*', // retrieves all attributes
+      '-lastmodified', // except this list of attributes (starting with a '-')
+    ],
+    attributesToHighlight: [],
+  });
 
+  if (!result.hits) result = { hits: [], nbPages: 1 };
+
+  const { hits } = result;
+
+  // move hit.objectID to hit.id
+  hits.forEach((e: GenericObject) => {
+    if (e.objectID && !e.id) {
+      e.id = e.objectID;
+      delete e.objectID;
+    }
+  });
+
+  // alphabetize results for non-search
+  if (!searchQuery) {
+    hits.sort((a: any, b: any) => a.sortAs.localeCompare(b.sortAs));
+  }
   // return
-  response.json(courses);
+  const pageCount = Math.max(1, result.nbPages);
+  response.json({ pageCount, courses: hits });
 });

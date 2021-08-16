@@ -40,6 +40,7 @@ export default class Course extends Model {
       category: string;
       speciality: string;
     }[];
+    locationsStrings: string[]; // represented as a list of ['{topic},{category},{speciality}']
     sortAs: string;
   };
 
@@ -59,6 +60,12 @@ export default class Course extends Model {
       level: data.level,
       department: data.department,
       locations: data.locations,
+      locationsStrings:
+        data.locationsStrings ||
+        data.locations.map((e: GenericObject) => {
+          const { topic, category, speciality } = e;
+          return `${topic || ''},${category || ''},${speciality || ''}`;
+        }),
       title: data.title,
       sortAs: data.sortAs,
     };

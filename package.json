@@ -6,7 +6,5 @@
   "author": "xtrp <36894883+xtrp@users.noreply.github.com>",
   "license": "UNLICENSED",
   "private": true,
-  "dependencies": {
-    "lodash.clonedeep": "^4.5.0"
-  }
+  "dependencies": {}
 }

@@ -9,14 +9,21 @@ import { LOCATIONS_HAS_OWN_ITEMS_KEY } from '../../util/constants';
 
 const refreshLocations = async () => {
   let locationsAsJSONStrings: string[] = [];
+  const locationsToCourseIDsMap: { [key: string]: string[] } = {};
   const courses = await getAllFromFirestore(Course.collectionName);
-  courses.forEach((course) => {
+  for (const course of courses.docs) {
     const courseObj = new Course(course.data(), course.id);
     const courseLocations = courseObj.data.locations;
-    courseLocations.forEach((location: Course['data']['locations'][0]) => {
-      locationsAsJSONStrings.push(JSON.stringify(location));
-    });
-  });
+    let location: Course['data']['locations'][0];
+    for (location of courseLocations) {
+      const locationAsJSONString = JSON.stringify(location);
+      locationsAsJSONStrings.push(locationAsJSONString);
+      if (!locationsToCourseIDsMap[locationAsJSONString]) locationsToCourseIDsMap[locationAsJSONString] = [];
+      locationsToCourseIDsMap[locationAsJSONString].push(courseObj.id);
+    }
+  }
+
+  // cache locations map
   const locationsAsObjs = removeDuplicatesFromArray(locationsAsJSONStrings).map((e: string) => JSON.parse(e));
   const locationsMap: GenericObject = {};
   locationsAsObjs.forEach((location: Course['data']['locations'][0]) => {
