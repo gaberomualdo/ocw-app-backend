@@ -56,9 +56,16 @@ export const getLectureDetails = functions.https.onRequest(async (request, respo
     try {
       const lectureNotesIndexURL = urljoin(url, '../../lecture-notes/');
       const lectureNotesIndexDocument = await fetchHTML(lectureNotesIndexURL);
-      const lectureNotesPath = lectureNotesIndexDocument
-        .querySelectorAll('#course_inner_section .maintabletemplate a')
-        [lectureIndex].getAttribute('href');
+      let lectureNotesPath;
+      if (lectureNotesIndexDocument.querySelectorAll('#course_inner_section .maintabletemplate table')) {
+        lectureNotesPath = lectureNotesIndexDocument
+          .querySelectorAll(`#course_inner_section .maintabletemplate table td:nth-child(${lectureIndex + 1}) a`)
+          [lectureIndex].getAttribute('href');
+      } else {
+        lectureNotesPath = lectureNotesIndexDocument
+          .querySelectorAll('#course_inner_section .maintabletemplate a')
+          [lectureIndex].getAttribute('href');
+      }
       if (!lectureNotesPath) return;
       lectureNotesURL = parseURL(lectureNotesPath);
     } catch (err) {}

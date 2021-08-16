@@ -43,31 +43,28 @@ export const getCourses = functions.https.onRequest(async (request: any, respons
   if (searchQuery) searchQueryAsString = normalizeString(searchQuery.toString());
 
   // find by
-  if (level) filters.push(`level:'${JSON.stringify(level)}'`);
+  if (level) filters.push(`level:${JSON.stringify(level)}`);
   if (departments) {
     departments
       .toString()
       .split(',')
-      .forEach((e: string) => filters.push(`department:'${JSON.stringify(e)}'`));
+      .forEach((e: string) => filters.push(`department:${JSON.stringify(e)}`));
   }
   if (instructors) {
     instructors
       .toString()
       .split(',')
-      .forEach((e: string) => filters.push(`instructors:'${JSON.stringify(e)}'`));
+      .forEach((e: string) => filters.push(`instructors:${JSON.stringify(e)}`));
   }
   if (semestersTaught) {
     semestersTaught
       .toString()
       .split(',')
-      .forEach((e: string) => filters.push(`semesterTaught:'${JSON.stringify(e)}'`));
+      .forEach((e: string) => filters.push(`semesterTaught:${JSON.stringify(e)}`));
   }
   if (location) {
-    const locationsStrings = location.toString().split(',');
-    locationsStrings
-      .toString()
-      .split(',')
-      .forEach((e: string) => filters.push(`locationsStrings:'${JSON.stringify(e)}'`));
+    const locationString = location.toString();
+    filters.push(`locationsStrings:${JSON.stringify(locationString)}`);
   }
 
   let result: GenericObject = await index.search(searchQueryAsString, {
