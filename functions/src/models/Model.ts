@@ -1,7 +1,4 @@
-import {
-  GenericObject,
-  getNewID,
-} from '../util';
+import { GenericObject, getNewID } from "../util";
 
 export default abstract class Model {
   abstract toJSON(): GenericObject;

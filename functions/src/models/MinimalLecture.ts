@@ -1,8 +1,5 @@
-import {
-  GenericObject,
-  toJSON,
-} from '../util';
-import Model from './Model';
+import { GenericObject, toJSON } from "../util";
+import Model from "./Model";
 
 export default class MinimalLecture extends Model {
   data: {

@@ -1,21 +1,23 @@
-import * as admin from 'firebase-admin';
+import * as admin from "firebase-admin";
 
-import {
-  saveToFirestore,
-  toJSON,
-} from '../util';
-import { CACHE_COLLECTION_NAME } from './constants';
+import { saveToFirestore, toJSON } from "../util";
+import { CACHE_COLLECTION_NAME } from "./constants";
 
 const firestore = admin.firestore();
 
-export type CacheItemName = 'instructors-names' | 'locations' | 'semesters-list';
+export type CacheItemName =
+  | "instructors-names"
+  | "locations"
+  | "semesters-list";
 
 export default class Cache {
   static async fetchFromCache(itemName: CacheItemName): Promise<any> {
     const itemRef = firestore.collection(CACHE_COLLECTION_NAME).doc(itemName);
     const doc = await itemRef.get();
     if (!doc.exists) {
-      throw new Error(`Cache with specified item name '${itemName}' not found.`);
+      throw new Error(
+        `Cache with specified item name '${itemName}' not found.`
+      );
     }
     return doc.data()?.data;
   }

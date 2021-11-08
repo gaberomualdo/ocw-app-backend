@@ -1,10 +1,6 @@
-import * as functions from 'firebase-functions';
+import * as functions from "firebase-functions";
 
-import {
-  fetchHTML,
-  findURLsInText,
-  removeUselessWhitespace,
-} from '../../util';
+import { fetchHTML, findURLsInText, removeUselessWhitespace } from "../../util";
 
 type Article = {
   title: string;
@@ -16,13 +12,13 @@ type Article = {
 const getBackgroundImageURLFromStyle = (style: string) => {
   const urls = findURLsInText(style);
   if (urls.length > 0) return urls[0];
-  return '';
+  return "";
 };
 
 const fetchBlogPosts = async (pageNumber: number, searchQuery?: string) => {
   if (pageNumber <= 0) pageNumber = 1;
   let url;
-  let searchQueryParam = searchQuery ? '?s=' + searchQuery : '';
+  let searchQueryParam = searchQuery ? "?s=" + searchQuery : "";
   if (pageNumber === 1) {
     url = `https://www.ocw-openmatters.org/${searchQueryParam}`;
   } else {
@@ -34,10 +30,14 @@ const fetchBlogPosts = async (pageNumber: number, searchQuery?: string) => {
   // get page count
   let pageCount;
   {
-    const pageCountElement = document.querySelector('.page-number');
+    const pageCountElement = document.querySelector(".page-number");
     if (!pageCountElement) return [];
     try {
-      pageCount = parseInt(removeUselessWhitespace(pageCountElement.textContent || '').split(' ')[3]);
+      pageCount = parseInt(
+        removeUselessWhitespace(pageCountElement.textContent || "").split(
+          " "
+        )[3]
+      );
     } catch (err) {
       return [];
     }
@@ -46,17 +46,21 @@ const fetchBlogPosts = async (pageNumber: number, searchQuery?: string) => {
 
   // get articles
   const articles: Article[] = [];
-  document.querySelectorAll('article').forEach((articleElement: any) => {
-    const headerElement = articleElement.querySelector('header h1 a');
+  document.querySelectorAll("article").forEach((articleElement: any) => {
+    const headerElement = articleElement.querySelector("header h1 a");
     const imageElement = articleElement.querySelector('[role="img"]');
-    const descriptionElement = articleElement.querySelector('.post-excerpt');
+    const descriptionElement = articleElement.querySelector(".post-excerpt");
     if (!headerElement || !imageElement || !descriptionElement) return;
-    let description = descriptionElement.textContent || 'No description for this article was provided.';
+    let description =
+      descriptionElement.textContent ||
+      "No description for this article was provided.";
     description = removeUselessWhitespace(description);
     const article = {
-      title: headerElement.textContent || '',
-      imageURL: getBackgroundImageURLFromStyle(imageElement.getAttribute('style') || ''),
-      url: headerElement?.getAttribute('href') || '',
+      title: headerElement.textContent || "",
+      imageURL: getBackgroundImageURLFromStyle(
+        imageElement.getAttribute("style") || ""
+      ),
+      url: headerElement?.getAttribute("href") || "",
       description,
     };
     if (
@@ -81,12 +85,14 @@ const fallbackNumber = (number: number, fallback: number): number => {
   }
 };
 
-export const getBlogPosts = functions.https.onRequest(async (request, response) => {
-  let { page, searchQuery } = request.query;
-  if (!page) page = '1';
-  if (searchQuery) searchQuery = searchQuery.toString();
-  if (!searchQuery) searchQuery = undefined;
-  const pageNumber = fallbackNumber(parseInt(page.toString()), 1);
-  const results = await fetchBlogPosts(pageNumber, searchQuery);
-  response.json(results);
-});
+export const getBlogPosts = functions.https.onRequest(
+  async (request, response) => {
+    let { page, searchQuery } = request.query;
+    if (!page) page = "1";
+    if (searchQuery) searchQuery = searchQuery.toString();
+    if (!searchQuery) searchQuery = undefined;
+    const pageNumber = fallbackNumber(parseInt(page.toString()), 1);
+    const results = await fetchBlogPosts(pageNumber, searchQuery);
+    response.json(results);
+  }
+);

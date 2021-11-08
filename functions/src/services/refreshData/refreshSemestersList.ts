@@ -1,8 +1,5 @@
-import Course from '../../models/Course';
-import {
-  Cache,
-  getAllFromFirestore,
-} from '../../util';
+import Course from "../../models/Course";
+import { Cache, getAllFromFirestore } from "../../util";
 
 const refreshSemestersList = async () => {
   const semesters: Set<string> = new Set();
@@ -14,13 +11,13 @@ const refreshSemestersList = async () => {
   const semestersArray = Array.from(semesters);
   semestersArray.sort((a: string, b: string) => {
     const semesterTime = (x: string) => {
-      let [season, year] = x.split(' ');
+      let [season, year] = x.split(" ");
       const yearNum = parseInt(year);
-      const seasons = ['Fall', 'Spring', 'Summer', 'Winter'];
+      const seasons = ["Fall", "Spring", "Summer", "Winter"];
       return yearNum * 10 + seasons.indexOf(season);
     };
     return semesterTime(b) - semesterTime(a);
   });
-  await Cache.saveToCache('semesters-list', semestersArray);
+  await Cache.saveToCache("semesters-list", semestersArray);
 };
 export default refreshSemestersList;

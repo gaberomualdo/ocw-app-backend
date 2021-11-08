@@ -1,5 +1,5 @@
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
+import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
 
 // Use the below code to initialize with a service account
 // const serviceAccount = require('./config/serviceAccountKey');
@@ -9,18 +9,18 @@ import * as functions from 'firebase-functions';
 
 admin.initializeApp();
 
-export * from './services/blog/';
-export * from './services/courses/';
-export * from './services/instructors/';
-export * from './services/lectures/';
-export * from './services/locations/';
-export * from './services/radio/';
-export * from './services/semesters/';
-export * from './services/userInfo/';
-export * from './services/refreshData/';
+export * from "./services/blog/";
+export * from "./services/courses/";
+export * from "./services/instructors/";
+export * from "./services/lectures/";
+export * from "./services/locations/";
+export * from "./services/radio/";
+export * from "./services/semesters/";
+export * from "./services/userInfo/";
+export * from "./services/refreshData/";
 
 export const isAlive = functions.https.onRequest((request, response) => {
-  const message = 'Firebase functions are running!';
+  const message = "Firebase functions are running!";
   functions.logger.log(message);
   response.json({
     message,
@@ -28,13 +28,13 @@ export const isAlive = functions.https.onRequest((request, response) => {
 });
 
 export const testFirestore = functions.https.onRequest((request, response) => {
-  const { getNewID, saveToFirestore } = require('./util/');
+  const { getNewID, saveToFirestore } = require("./util/");
 
-  functions.logger.log('Attempting to save test item to Firestore');
+  functions.logger.log("Attempting to save test item to Firestore");
   const itemID = getNewID();
-  saveToFirestore('test-collection', itemID, {
+  saveToFirestore("test-collection", itemID, {
     message: `Hello, world from item with ID: ${itemID}`,
   })
     .catch((err: any) => response.json(err))
-    .then(() => response.json({ message: 'Success' }));
+    .then(() => response.json({ message: "Success" }));
 });

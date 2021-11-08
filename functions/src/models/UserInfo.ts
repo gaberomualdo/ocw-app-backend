@@ -1,19 +1,15 @@
-import {
-  GenericObject,
-  saveToFirestore,
-  toJSON,
-} from '../util';
-import Lecture from './Lecture';
-import Model from './Model';
+import { GenericObject, saveToFirestore, toJSON } from "../util";
+import Lecture from "./Lecture";
+import Model from "./Model";
 
 export default class UserInfo extends Model {
-  static collectionName: string = 'user-info';
+  static collectionName: string = "user-info";
   data: {
     favoritedCourseIDs: string[];
     lectureProgress: {
       [lectureURL: string]: {
         progressSeconds: number;
-        lecture: Lecture['data'];
+        lecture: Lecture["data"];
       };
     };
   };

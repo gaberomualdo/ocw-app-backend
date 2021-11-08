@@ -8,7 +8,7 @@ export default class Semester {
   }
   static fromString(semester: string): Semester {
     let [term, year] = semester.split(" ");
-    if(["Fall", "Spring", "Summer", "Winter"].indexOf(term) === -1) {
+    if (["Fall", "Spring", "Summer", "Winter"].indexOf(term) === -1) {
       term = "Fall"; // Default to Fall
     }
     return new Semester(term, parseInt(year));

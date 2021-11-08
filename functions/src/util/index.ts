@@ -1,14 +1,14 @@
-import * as admin from 'firebase-admin';
-import { JSDOM } from 'jsdom';
-import fetch from 'node-fetch';
-import urljoin = require('url-join');
+import * as admin from "firebase-admin";
+import { JSDOM } from "jsdom";
+import fetch from "node-fetch";
+import urljoin = require("url-join");
 
-import Course from '../models/Course';
-import Cache, { CacheItemName } from './Cache';
-import { SITE_BASEURL } from './constants';
+import Course from "../models/Course";
+import Cache, { CacheItemName } from "./Cache";
+import { SITE_BASEURL } from "./constants";
 
-const matchAll = require('string.prototype.matchall');
-const uuid = require('uuid');
+const matchAll = require("string.prototype.matchall");
+const uuid = require("uuid");
 const firestore = admin.firestore();
 
 export { Cache, CacheItemName };
@@ -17,7 +17,11 @@ export function getNewID(): string {
   return uuid.v4();
 }
 
-export async function saveToFirestore(collection: string, id: string, data: any) {
+export async function saveToFirestore(
+  collection: string,
+  id: string,
+  data: any
+) {
   return await firestore.collection(collection).doc(id).set(data);
 }
 
@@ -25,14 +29,17 @@ export async function getAllFromFirestore(collection: string) {
   return await firestore.collection(collection).get();
 }
 
-export async function getInstructorsCoursesMap(): Promise<{ [key: string]: Course[] }> {
+export async function getInstructorsCoursesMap(): Promise<{
+  [key: string]: Course[];
+}> {
   const instructorsCoursesMap: { [key: string]: Course[] } = {};
   const courses = await getAllFromFirestore(Course.collectionName);
   courses.forEach((course) => {
     const courseObj = new Course(course.data(), course.id);
     const courseData = courseObj.data;
     courseData.instructors.forEach((instructorName: any) => {
-      if (!instructorsCoursesMap[instructorName]) instructorsCoursesMap[instructorName] = [];
+      if (!instructorsCoursesMap[instructorName])
+        instructorsCoursesMap[instructorName] = [];
       instructorsCoursesMap[instructorName].push(courseObj);
     });
   });
@@ -45,7 +52,7 @@ export function removeDuplicatesFromArray(array: any[]) {
 
 export function cleanString(str: string) {
   const newStr = str;
-  newStr.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  newStr.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return newStr;
 }
 
@@ -54,7 +61,7 @@ export function normalizeString(str: string) {
 }
 
 export function removeUselessWhitespace(str: string) {
-  return str.replace(/\s\s+/g, ' ').trim();
+  return str.replace(/\s\s+/g, " ").trim();
 }
 
 export async function fetchJSON(url: string) {
@@ -69,7 +76,7 @@ export async function fetchHTML(url: string) {
 }
 
 export function isPathAbsolute(path: string) {
-  const r = new RegExp('^(?:[a-z]+:)?//', 'i');
+  const r = new RegExp("^(?:[a-z]+:)?//", "i");
   return r.test(path);
 }
 
@@ -86,7 +93,11 @@ export function getHostname(url: string) {
 export function isLocalURL(url: string): boolean {
   const hostname = getHostname(url);
   const ourHostname = getHostname(SITE_BASEURL);
-  return hostname === ourHostname || hostname === `www.${ourHostname}` || `www.${hostname}` === ourHostname;
+  return (
+    hostname === ourHostname ||
+    hostname === `www.${ourHostname}` ||
+    `www.${hostname}` === ourHostname
+  );
 }
 
 export function getInnermostParent(element: any) {
@@ -98,7 +109,8 @@ export function getInnermostParent(element: any) {
 }
 
 export function findURLsInText(text: string) {
-  const regex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gm;
+  const regex =
+    /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gm;
   return [...matchAll(text, regex)].map((e: string[]) => e[0]);
 }
 
@@ -133,7 +145,7 @@ export function toTitleCase(str: string) {
 }
 
 export function parseKebabCase(text: string) {
-  return text.replace(/-/g, ' ');
+  return text.replace(/-/g, " ");
 }
 
 export const notUndefinedFilter = (e: any) => e !== undefined;

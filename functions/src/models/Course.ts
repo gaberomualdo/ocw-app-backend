@@ -1,11 +1,7 @@
-import * as admin from 'firebase-admin';
+import * as admin from "firebase-admin";
 
-import {
-  GenericObject,
-  saveToFirestore,
-  toJSON,
-} from '../util';
-import Model from './Model';
+import { GenericObject, saveToFirestore, toJSON } from "../util";
+import Model from "./Model";
 
 const firestore = admin.firestore();
 
@@ -19,7 +15,7 @@ type CourseFeature = {
 };
 
 export default class Course extends Model {
-  static collectionName: string = 'courses';
+  static collectionName: string = "courses";
   data: {
     url: string;
     title: string;
@@ -64,18 +60,20 @@ export default class Course extends Model {
         data.locationsStrings ||
         data.locations.map((e: GenericObject) => {
           const { topic, category, speciality } = e;
-          return `${topic || ''},${category || ''},${speciality || ''}`;
+          return `${topic || ""},${category || ""},${speciality || ""}`;
         }),
       title: data.title,
       sortAs: data.sortAs,
     };
   }
 
-  async setIDToExistingCourseID(matchByKey: string = 'url') {
+  async setIDToExistingCourseID(matchByKey: string = "url") {
     const data: GenericObject = this.toJSON();
     const matchByValue: any = data[matchByKey];
     if (matchByValue) {
-      const query = firestore.collection(Course.collectionName).where(matchByKey, '==', matchByValue);
+      const query = firestore
+        .collection(Course.collectionName)
+        .where(matchByKey, "==", matchByValue);
       const snapshot = await query.get();
       snapshot.forEach((doc) => {
         this.id = doc.id;
